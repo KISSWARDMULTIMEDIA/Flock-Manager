@@ -106,18 +106,19 @@
       min-height: 100vh;
       color: var(--ink);
       background:
-        linear-gradient(90deg, rgba(248, 251, 255, .96) 0%, rgba(248, 251, 255, .86) 45%, rgba(248, 251, 255, .28) 100%),
-        url("assets/TACGH-MAM-DIS.png") right 7vw center / min(48vw, 520px) auto no-repeat,
+        linear-gradient(180deg, rgba(248, 251, 255, .95), rgba(248, 251, 255, .9)),
+        url("assets/TACGH-MAM-DIS.png") center / min(42vw, 430px) auto no-repeat,
         var(--surface-gradient);
       display: grid;
-      align-items: center;
+      place-items: center;
       padding: 44px clamp(18px, 5vw, 70px);
+      text-align: center;
     }
 
     [data-theme="dark"] .auth-landing {
       background:
-        linear-gradient(90deg, rgba(16, 23, 34, .97) 0%, rgba(16, 23, 34, .88) 48%, rgba(16, 23, 34, .34) 100%),
-        url("assets/TACGH-MAM-DIS.png") right 7vw center / min(48vw, 520px) auto no-repeat,
+        linear-gradient(180deg, rgba(16, 23, 34, .96), rgba(16, 23, 34, .9)),
+        url("assets/TACGH-MAM-DIS.png") center / min(42vw, 430px) auto no-repeat,
         var(--surface-gradient);
     }
 
@@ -125,11 +126,13 @@
       max-width: 760px;
       display: grid;
       gap: 28px;
+      justify-items: center;
     }
 
     .auth-brand {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 14px;
     }
 
@@ -171,6 +174,7 @@
     .auth-hero {
       display: grid;
       gap: 18px;
+      justify-items: center;
     }
 
     .auth-hero h2 {
@@ -203,6 +207,7 @@
       padding: 12px 14px;
       border-radius: 8px;
       box-shadow: 0 12px 26px rgba(24, 34, 53, .08);
+      text-align: left;
     }
 
     .auth-highlight strong {
@@ -221,6 +226,7 @@
     .auth-actions {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 12px;
       flex-wrap: wrap;
     }
@@ -1091,7 +1097,7 @@
       .topbar-actions { justify-content: stretch; width: 100%; }
       .currency-control { width: 100%; }
       .auth-landing {
-        align-items: start;
+        place-items: center;
         background:
           linear-gradient(180deg, rgba(248, 251, 255, .98), rgba(248, 251, 255, .9)),
           url("assets/TACGH-MAM-DIS.png") center bottom 28px / min(70vw, 320px) auto no-repeat,
