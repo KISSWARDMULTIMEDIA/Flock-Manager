@@ -1,0 +1,2942 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flock Manager</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --ink: #182235;
+      --muted: #627086;
+      --line: #d9e1ec;
+      --soft: #eef4f8;
+      --panel: #ffffff;
+      --panel-strong: #f8fbff;
+      --navy: #263a78;
+      --navy-2: #1c2957;
+      --green: #137a63;
+      --teal: #0c8a9d;
+      --gold: #b77d11;
+      --coral: #d9573c;
+      --focus: #2e7dd7;
+      --danger: #b42318;
+      --shadow: 0 18px 38px rgba(24, 34, 53, .1);
+      --surface-gradient: radial-gradient(circle at 12% 8%, rgba(12, 138, 157, .13), transparent 30%),
+        linear-gradient(135deg, #f7fbff 0%, #edf5f4 48%, #fff8ec 100%);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --ink: #f3f7fb;
+      --muted: #b9c5d6;
+      --line: #2e3d56;
+      --soft: #101722;
+      --panel: #172233;
+      --panel-strong: #1d2a3d;
+      --navy: #8fb0ff;
+      --navy-2: #c3d3ff;
+      --green: #4ed2a2;
+      --teal: #65d7e6;
+      --gold: #f0bd54;
+      --coral: #ff8a70;
+      --focus: #82b6ff;
+      --danger: #ff9a91;
+      --shadow: 0 18px 38px rgba(0, 0, 0, .28);
+      --surface-gradient: radial-gradient(circle at 14% 8%, rgba(101, 215, 230, .14), transparent 32%),
+        linear-gradient(135deg, #101722 0%, #152235 52%, #201c2a 100%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--surface-gradient), var(--soft);
+      font-size: 14px;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 9px 12px;
+      cursor: pointer;
+      min-height: 38px;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+
+    button:hover {
+      border-color: var(--teal);
+      box-shadow: 0 8px 18px rgba(12, 138, 157, .13);
+      transform: translateY(-1px);
+    }
+    button:focus, input:focus, select:focus, textarea:focus {
+      outline: 2px solid color-mix(in srgb, var(--focus) 35%, transparent);
+      outline-offset: 1px;
+      border-color: var(--focus);
+    }
+
+    .primary {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--navy-2), var(--teal));
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .success {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--green), var(--teal));
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .danger {
+      border-color: #f2b8b5;
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .ghost { background: transparent; }
+
+    .auth-landing {
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(248, 251, 255, .95), rgba(248, 251, 255, .9)),
+        url("assets/TACGH-MAM-DIS.png") center / min(42vw, 430px) auto no-repeat,
+        var(--surface-gradient);
+      display: grid;
+      place-items: center;
+      padding: 44px clamp(18px, 5vw, 70px);
+      text-align: center;
+    }
+
+    [data-theme="dark"] .auth-landing {
+      background:
+        linear-gradient(180deg, rgba(16, 23, 34, .96), rgba(16, 23, 34, .9)),
+        url("assets/TACGH-MAM-DIS.png") center / min(42vw, 430px) auto no-repeat,
+        var(--surface-gradient);
+    }
+
+    .auth-content {
+      max-width: 760px;
+      display: grid;
+      gap: 28px;
+      justify-items: center;
+    }
+
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .auth-brand-mark {
+      width: 58px;
+      height: 58px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--navy-2), var(--teal));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .auth-brand-mark img {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      background: var(--panel);
+    }
+
+    .auth-brand h1 {
+      margin: 0;
+      font-size: 24px;
+      color: var(--navy-2);
+      line-height: 1.1;
+    }
+
+    .auth-brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .auth-hero {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .auth-hero h2 {
+      margin: 0;
+      max-width: 720px;
+      font-size: clamp(40px, 7vw, 76px);
+      line-height: .98;
+      color: var(--navy-2);
+      letter-spacing: 0;
+    }
+
+    .auth-hero p {
+      margin: 0;
+      max-width: 650px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.58;
+    }
+
+    .auth-highlights {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(140px, 1fr));
+      gap: 12px;
+      max-width: 720px;
+    }
+
+    .auth-highlight {
+      border-left: 4px solid var(--teal);
+      background: color-mix(in srgb, var(--panel) 88%, transparent);
+      padding: 12px 14px;
+      border-radius: 8px;
+      box-shadow: 0 12px 26px rgba(24, 34, 53, .08);
+      text-align: left;
+    }
+
+    .auth-highlight strong {
+      display: block;
+      color: var(--navy-2);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .auth-highlight span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .auth-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .google-button-slot,
+    .google-auth-button {
+      min-width: 210px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .google-auth-button {
+      background: #fff;
+      color: #202124;
+      border-color: #dadce0;
+      font-weight: 750;
+      box-shadow: 0 10px 24px rgba(24, 34, 53, .1);
+    }
+
+    .google-auth-button svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .auth-note {
+      color: var(--muted);
+      font-size: 12px;
+      max-width: 620px;
+      line-height: 1.5;
+    }
+
+    .auth-message {
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 700;
+      min-height: 18px;
+    }
+
+    .signed-in-user {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+
+    .sidebar {
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      border-right: 1px solid var(--line);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .brand-mark {
+      width: 72px;
+      height: 72px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--navy-2), var(--teal));
+      color: #fff;
+      font-size: 24px;
+      font-weight: 800;
+      box-shadow: 0 12px 24px rgba(12, 138, 157, .2);
+      overflow: hidden;
+    }
+
+    .brand img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      background: var(--panel);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.15;
+      color: var(--navy-2);
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .brand-mark span[hidden] { display: none; }
+
+    .tabs {
+      display: grid;
+      gap: 6px;
+    }
+
+    .tab {
+      text-align: left;
+      border-color: transparent;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 650;
+    }
+
+    .nav-icon,
+    .section-icon {
+      width: 26px;
+      height: 26px;
+      border: 1px solid color-mix(in srgb, var(--teal) 34%, var(--line));
+      border-radius: 6px;
+      display: inline-grid;
+      place-items: center;
+      color: var(--teal);
+      background: color-mix(in srgb, var(--teal) 10%, var(--panel));
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tab.active {
+      background: color-mix(in srgb, var(--teal) 13%, var(--panel));
+      color: var(--navy-2);
+      border-color: color-mix(in srgb, var(--teal) 28%, var(--line));
+      box-shadow: inset 3px 0 0 var(--teal);
+    }
+
+    .side-actions {
+      margin-top: auto;
+      display: grid;
+      gap: 8px;
+    }
+
+    main {
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 58px;
+    }
+
+    .topbar h2 {
+      margin: 0;
+      font-size: 24px;
+      color: var(--ink);
+    }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .theme-icon { font-size: 16px; }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .currency-control {
+      min-width: 260px;
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .currency-control select {
+      min-height: 38px;
+    }
+
+    .status {
+      color: var(--muted);
+      min-height: 22px;
+      text-align: right;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      background: linear-gradient(180deg, var(--teal), var(--gold));
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 24px;
+      color: var(--navy-2);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 340px) 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .dashboard-grid .metrics {
+      grid-column: 1 / -1;
+    }
+
+    .dashboard-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .insight-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .insight-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: var(--panel-strong);
+    }
+
+    .insight-row strong { font-size: 14px; }
+
+    .insight-row small {
+      color: var(--muted);
+      display: block;
+      margin-top: 3px;
+    }
+
+    .bar {
+      height: 8px;
+      background: #edf0f6;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), var(--gold));
+      border-radius: inherit;
+      min-width: 4px;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: 1.2fr minmax(170px, .5fr) minmax(170px, .5fr) minmax(160px, .4fr);
+      gap: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .panel-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .panel-body { padding: 16px; }
+
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      margin-bottom: 12px;
+    }
+
+    .member-list {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 310px);
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .member-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 10px;
+    }
+
+    .member-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-strong);
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .member-card .avatar {
+      width: 54px;
+      height: 54px;
+    }
+
+    .member-card strong { display: block; }
+
+    .member-card small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .member-card button { margin-top: 10px; }
+
+    .member-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 10px;
+      text-align: left;
+      padding: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 7px;
+      min-height: 58px;
+    }
+
+    .member-row.active {
+      border-color: var(--navy);
+      background: color-mix(in srgb, var(--navy) 12%, var(--panel));
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: color-mix(in srgb, var(--teal) 12%, var(--panel));
+      border: 1px solid var(--line);
+    }
+
+    .member-row strong {
+      display: block;
+      line-height: 1.2;
+    }
+
+    .member-row small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 220px repeat(2, minmax(180px, 1fr));
+      gap: 14px 16px;
+      align-items: start;
+    }
+
+    .member-form-grid {
+      grid-template-columns: minmax(220px, 260px) repeat(2, minmax(0, 1fr));
+      gap: 16px 18px;
+      align-items: start;
+    }
+
+    .member-form-grid > label,
+    .member-form-grid > div,
+    .member-form-grid > fieldset {
+      min-width: 0;
+    }
+
+    .photo-box {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .member-form-grid .photo-box {
+      grid-column: 1;
+      grid-row: 1 / span 8;
+      position: sticky;
+      top: 16px;
+    }
+
+    .member-form-grid > label:nth-of-type(odd) { grid-column: 2; }
+    .member-form-grid > label:nth-of-type(even) { grid-column: 3; }
+
+    .photo-preview {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      border: 1px dashed #aab3c2;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--panel-strong);
+      overflow: hidden;
+      color: var(--muted);
+      text-align: center;
+      padding: 10px;
+    }
+
+    .photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    .camera-panel {
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--panel-strong);
+    }
+
+    .camera-panel video {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      border-radius: 6px;
+      background: #000;
+      object-fit: cover;
+    }
+
+    .camera-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .form-section-title {
+      grid-column: 2 / -1;
+      margin: 4px 0 0;
+      padding: 10px 12px;
+      border-left: 4px solid var(--teal);
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--teal) 8%, var(--panel));
+    }
+
+    .form-section-title h4 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .form-section-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      color: var(--ink);
+      background: var(--panel);
+      min-height: 38px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 84px;
+    }
+
+    .wide { grid-column: span 2; }
+
+    .member-form-grid .wide,
+    .member-form-grid .form-section-title,
+    .member-form-grid .leadership-fieldset,
+    .member-form-grid .next-of-kin-grid {
+      grid-column: 2 / -1;
+    }
+
+    .leadership-fieldset {
+      grid-column: 2 / -1;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px 16px;
+      background: var(--panel-strong);
+      min-width: 0;
+    }
+
+    .leadership-fieldset legend {
+      padding: 0 8px;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .leadership-fieldset > p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .leadership-groups {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .leadership-group {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--panel) 78%, var(--panel-strong));
+    }
+
+    .leadership-group h5 {
+      margin: 0;
+      color: var(--navy-2);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+      gap: 8px 14px;
+    }
+
+    .check-option {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      align-items: start;
+      gap: 7px;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 12px;
+      line-height: 1.3;
+      min-height: 20px;
+    }
+
+    .check-option input {
+      width: 16px;
+      min-height: 16px;
+      height: 16px;
+      margin: 1px 0 0;
+      accent-color: var(--teal);
+    }
+
+    .leadership-group:nth-child(1) { grid-row: span 2; }
+
+    .next-of-kin-grid {
+      grid-column: 2 / -1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(160px, 1fr));
+      gap: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--panel-strong);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: var(--panel);
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--panel-strong);
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    td:last-child, th:last-child { text-align: right; }
+
+    .link-button {
+      border: 0;
+      background: transparent;
+      color: var(--navy-2);
+      padding: 0;
+      min-height: 0;
+      font-weight: 800;
+      text-align: left;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .link-button:hover {
+      box-shadow: none;
+      transform: none;
+      color: var(--teal);
+    }
+
+    .report-detail {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-strong);
+      overflow: hidden;
+    }
+
+    .report-detail-header {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .report-detail-header h4 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .report-detail-header small {
+      color: var(--muted);
+      display: block;
+      margin-top: 4px;
+    }
+
+    .report-detail-body { padding: 14px; }
+
+    .empty {
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .hidden { display: none !important; }
+
+    .backup-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .attendance-hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .attendance-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .attendance-summary {
+      display: grid;
+      gap: 4px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .attendance-summary strong {
+      color: var(--navy-2);
+      font-size: 24px;
+    }
+
+    .attendance-record-row {
+      display: grid;
+      grid-template-columns: minmax(120px, .75fr) minmax(180px, 1.2fr) minmax(180px, 1fr) minmax(120px, .7fr) minmax(180px, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .attendance-record-row:last-child { border-bottom: 0; }
+
+    .attendance-record-row small {
+      color: var(--muted);
+      display: block;
+      margin-top: 4px;
+    }
+
+    .attendance-counts {
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .attendance-total {
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .attendance-form-panel,
+    .attendance-analysis-panel {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--panel-strong);
+    }
+
+    .attendance-analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(130px, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .tabs { grid-template-columns: repeat(2, 1fr); }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .topbar-actions { justify-content: stretch; width: 100%; }
+      .currency-control { width: 100%; }
+      .auth-landing {
+        place-items: center;
+        background:
+          linear-gradient(180deg, rgba(248, 251, 255, .98), rgba(248, 251, 255, .9)),
+          url("assets/TACGH-MAM-DIS.png") center bottom 28px / min(70vw, 320px) auto no-repeat,
+          var(--surface-gradient);
+        padding-bottom: 260px;
+      }
+      [data-theme="dark"] .auth-landing {
+        background:
+          linear-gradient(180deg, rgba(16, 23, 34, .98), rgba(16, 23, 34, .9)),
+          url("assets/TACGH-MAM-DIS.png") center bottom 28px / min(70vw, 320px) auto no-repeat,
+          var(--surface-gradient);
+      }
+      .auth-highlights { grid-template-columns: 1fr; }
+      .auth-actions { align-items: stretch; flex-direction: column; }
+      .google-auth-button { width: 100%; }
+      .layout, .form-grid, .dashboard-grid, .filters-grid { grid-template-columns: 1fr; }
+      .member-form-grid .photo-box {
+        grid-column: auto;
+        grid-row: auto;
+        position: static;
+      }
+      .wide,
+      .member-form-grid .wide,
+      .form-section-title,
+      .member-form-grid .form-section-title,
+      .leadership-fieldset,
+      .member-form-grid .leadership-fieldset,
+      .next-of-kin-grid,
+      .member-form-grid .next-of-kin-grid { grid-column: auto; }
+      .leadership-groups, .checkbox-grid, .next-of-kin-grid { grid-template-columns: 1fr; }
+      .leadership-group:nth-child(1) { grid-row: auto; }
+      .metrics { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .photo-box { grid-row: auto; max-width: 320px; }
+      .attendance-hero { align-items: flex-start; flex-direction: column; }
+      .attendance-summary { text-align: left; }
+      .attendance-record-row, .attendance-analysis-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      .sidebar, .topbar, .panel-header button, .side-actions, .form-actions, .search { display: none !important; }
+      .app, main, .layout { display: block; padding: 0; }
+      .panel { box-shadow: none; border: 0; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <section id="authLanding" class="auth-landing">
+    <div class="auth-content">
+      <div class="auth-brand">
+        <div class="auth-brand-mark" aria-hidden="true">
+          <img src="assets/TACGH-MAM-DIS.png" alt="" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+          <span hidden>FM</span>
+        </div>
+        <div>
+          <h1>Flock Manager</h1>
+          <p>Powered by KISSWARD MULTIMEIA</p>
+        </div>
+      </div>
+
+      <div class="auth-hero">
+        <h2>Church records, giving, and attendance in one trusted workspace.</h2>
+        <p>Manage members, ministries, welfare, tithes, offerings, attendance, backups, and reports from a focused system built for church administration.</p>
+      </div>
+
+      <div class="auth-highlights" aria-label="Flock Manager highlights">
+        <div class="auth-highlight">
+          <strong>Member Care</strong>
+          <span>Profiles, next of kin, leadership roles, contact details, and ministry placement.</span>
+        </div>
+        <div class="auth-highlight">
+          <strong>Giving Records</strong>
+          <span>Payments, payment history, currency display, and giving totals by member.</span>
+        </div>
+        <div class="auth-highlight">
+          <strong>Service Insight</strong>
+          <span>Attendance records, summaries, reports, backup, and restore tools.</span>
+        </div>
+      </div>
+
+      <div class="auth-actions">
+        <div id="googleSignUpSlot" class="google-button-slot"></div>
+        <div id="googleSignInSlot" class="google-button-slot"></div>
+        <button id="googleSignUpBtn" class="google-auth-button" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path>
+            <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"></path>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38z"></path>
+          </svg>
+          Sign up with Google
+        </button>
+        <button id="googleSignInBtn" class="primary" type="button">Sign in with Google</button>
+      </div>
+      <div id="authMessage" class="auth-message" role="status"></div>
+      <p class="auth-note">Google sign-in protects access to this browser-based workspace. For a public SaaS release, connect this sign-in to a backend database and permission model before storing real member records online.</p>
+    </div>
+  </section>
+
+  <div id="appShell" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <img src="assets/TACGH-MAM-DIS.png" alt="" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+          <span hidden>FM</span>
+        </div>
+        <div>
+          <h1>Flock Manager</h1>
+          <p>Powered by KISSWARD MULTIMEIA</p>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Main sections">
+        <button class="tab active" data-view="dashboard" type="button"><span class="nav-icon">DB</span>Dashboard</button>
+        <button class="tab" data-view="createMember" type="button"><span class="nav-icon">+</span>Create New Member</button>
+        <button class="tab" data-view="members" type="button"><span class="nav-icon">MB</span>Members</button>
+        <button class="tab" data-view="payments" type="button"><span class="nav-icon">GH</span>Payments</button>
+        <button class="tab" data-view="attendance" type="button"><span class="nav-icon">AT</span>Attendance</button>
+        <button class="tab" data-view="reports" type="button"><span class="nav-icon">RP</span>Reports</button>
+        <button class="tab" data-view="backup" type="button"><span class="nav-icon">BK</span>Backup</button>
+      </nav>
+
+      <div class="side-actions">
+        <div id="signedInUser" class="signed-in-user"></div>
+        <button id="signOutBtn" type="button">Sign Out</button>
+        <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">
+          <span class="theme-icon" aria-hidden="true">☀</span>
+          <span id="themeToggleText">Light Mode</span>
+        </button>
+        <button id="printBtn" type="button">Print Current View</button>
+        <button id="saveAllDataBtn" class="success" type="button">Save All Data</button>
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <h2 id="viewTitle">Dashboard</h2>
+        <div class="topbar-actions">
+          <label class="currency-control">Currency Type
+            <select id="currencySelect" aria-label="Currency Type"></select>
+          </label>
+          <div class="status" id="statusText">Opening database...</div>
+        </div>
+      </div>
+
+      <section id="dashboardView" class="view dashboard-grid">
+        <div class="metrics" aria-label="Dashboard totals">
+          <div class="metric"><span>Total Members</span><strong id="metricMembers">0</strong></div>
+          <div class="metric"><span>Total Tithes</span><strong id="metricTithes">0.00</strong></div>
+          <div class="metric"><span>Total Welfare</span><strong id="metricWelfare">0.00</strong></div>
+          <div class="metric"><span>Total Giving</span><strong id="metricGiving">0.00</strong></div>
+        </div>
+
+        <div class="dashboard-stack">
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="section-title"><span class="section-icon">MN</span>Ministry Overview</h3>
+            </div>
+            <div class="panel-body" id="ministryOverview"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="section-title"><span class="section-icon">GH</span>Finance Overview</h3>
+            </div>
+            <div class="panel-body" id="financeOverview"></div>
+          </div>
+        </div>
+
+        <div class="dashboard-stack">
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="section-title"><span class="section-icon">QA</span>Quick Actions</h3>
+            </div>
+            <div class="panel-body">
+              <div class="quick-actions">
+                <button class="primary" type="button" data-go="createMember">Add Member</button>
+                <button class="primary" type="button" data-go="payments">Record Payment</button>
+                <button type="button" data-go="attendance">Attendance</button>
+                <button type="button" data-go="reports">Open Reports</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="section-title"><span class="section-icon">RM</span>Recent Members</h3>
+            </div>
+            <div class="panel-body" id="recentMembers"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="section-title"><span class="section-icon">RP</span>Recent Payments</h3>
+            </div>
+            <div class="panel-body" id="recentPayments"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="membersView" class="view hidden">
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="section-title"><span class="section-icon">MB</span>Members Overview</h3>
+            <button id="newMemberTopBtn" class="primary" type="button">Create New Member</button>
+          </div>
+          <div class="panel-body">
+            <div class="filters-grid">
+              <label>Search
+                <input id="memberSearch" type="search" placeholder="Name, phone, WhatsApp, location">
+              </label>
+              <label>Ministry
+                <select id="memberMinistryFilter"></select>
+              </label>
+              <label>Status
+                <select id="memberStatusFilter"></select>
+              </label>
+              <label>View Mode
+                <select id="memberViewMode">
+                  <option value="list">List</option>
+                  <option value="cards">Cards</option>
+                </select>
+              </label>
+            </div>
+            <div id="memberList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="createMemberView" class="view hidden">
+        <div class="panel">
+          <div class="panel-header">
+            <h3 id="memberFormTitle" class="section-title"><span class="section-icon">+</span>New Member</h3>
+          </div>
+          <div class="panel-body">
+            <form id="memberForm">
+              <input type="hidden" id="memberId">
+              <div class="form-grid member-form-grid">
+                <div class="photo-box">
+                  <div id="photoPreview" class="photo-preview">No photo selected</div>
+                  <div class="photo-actions">
+                    <input id="photoInput" type="file" accept="image/*">
+                    <button id="startCameraBtn" class="primary" type="button">Capture with Camera</button>
+                    <button id="removePhotoBtn" type="button">Remove Photo</button>
+                  </div>
+                  <div id="cameraPanel" class="camera-panel hidden">
+                    <video id="cameraPreview" autoplay playsinline></video>
+                    <div class="camera-actions">
+                      <button id="takePhotoBtn" class="success" type="button">Take Photo</button>
+                      <button id="cancelCameraBtn" type="button">Cancel</button>
+                    </div>
+                  </div>
+                  <canvas id="cameraCanvas" class="hidden"></canvas>
+                </div>
+
+                <div class="form-section-title">
+                  <h4>Member Profile</h4>
+                  <p>Core identity, contact, and household details for quick lookup.</p>
+                </div>
+
+                <label>Member Code
+                  <input id="memberCode" autocomplete="off">
+                </label>
+                <label>Status
+                  <select id="membershipStatus">
+                    <option>Active</option>
+                    <option>New Convert</option>
+                    <option>Transferred</option>
+                    <option>Inactive</option>
+                  </select>
+                </label>
+                <label>First Name
+                  <input id="firstName" required autocomplete="given-name">
+                </label>
+                <label>Last Name
+                  <input id="lastName" required autocomplete="family-name">
+                </label>
+                <label>Middle Name
+                  <input id="middleName">
+                </label>
+                <label>Gender
+                  <select id="gender">
+                    <option value=""></option>
+                    <option>Male</option>
+                    <option>Female</option>
+                  </select>
+                </label>
+                <label>Date of Birth
+                  <input id="dateOfBirth" type="date">
+                </label>
+                <label>Date Joined
+                  <input id="dateJoined" type="date">
+                </label>
+                <label>Marital Status
+                  <select id="maritalStatus">
+                    <option value=""></option>
+                    <option>Single</option>
+                    <option>Married</option>
+                    <option>Widowed</option>
+                    <option>Divorced</option>
+                  </select>
+                </label>
+                <label>Occupation
+                  <input id="occupation">
+                </label>
+                <label>Level of Education
+                  <select id="educationLevel"></select>
+                </label>
+
+                <div class="form-section-title">
+                  <h4>Leadership</h4>
+                  <p>Select any positions the member currently holds or has held.</p>
+                </div>
+
+                <fieldset class="leadership-fieldset">
+                  <legend>Leadership Positions</legend>
+                  <p>Choose all applicable pastoral, administrative, financial, support, and volunteer roles.</p>
+                  <div id="leadershipOptions" class="leadership-groups"></div>
+                </fieldset>
+
+                <label>Ministry
+                  <select id="ministry"></select>
+                </label>
+                <label>Phone Number
+                  <input id="phoneNumber" type="tel" autocomplete="tel">
+                </label>
+                <label>WhatsApp Number
+                  <input id="whatsappNumber" type="tel">
+                </label>
+                <label>Email
+                  <input id="email" type="email" autocomplete="email">
+                </label>
+                <label>Location / Area
+                  <input id="location">
+                </label>
+                <label class="wide">Home Address
+                  <input id="homeAddress">
+                </label>
+
+                <div class="form-section-title">
+                  <h4>Next of Kin</h4>
+                  <p>Primary family or trusted contact connected to this member.</p>
+                </div>
+
+                <div class="next-of-kin-grid">
+                  <label>Name
+                    <input id="nextOfKinName" autocomplete="name">
+                  </label>
+                  <label>Phone
+                    <input id="nextOfKinPhone" type="tel" autocomplete="tel">
+                  </label>
+                  <label>Relationship
+                    <input id="nextOfKinRelationship">
+                  </label>
+                </div>
+
+                <label>Emergency Contact Person
+                  <input id="emergencyName">
+                </label>
+                <label>Emergency Phone
+                  <input id="emergencyPhone" type="tel">
+                </label>
+                <label class="wide">Notes
+                  <textarea id="notes"></textarea>
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <div class="action-group">
+                  <button id="saveMemberBtn" class="success" type="button">Save Member</button>
+                  <button id="newMemberBtn" type="button">New Member</button>
+                </div>
+                <button id="deleteMemberBtn" class="danger" type="button">Delete Member</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="paymentsView" class="view hidden">
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="section-title"><span class="section-icon">GH</span>Record Giving</h3>
+          </div>
+          <div class="panel-body">
+            <form id="paymentForm">
+              <input type="hidden" id="paymentId">
+              <div class="form-grid">
+                <label>Member
+                  <select id="paymentMember" required></select>
+                </label>
+                <label>Payment Type
+                  <select id="paymentType" required>
+                    <option>Tithe</option>
+                    <option>Welfare</option>
+                    <option>Offering</option>
+                    <option>Pledge</option>
+                    <option>Donation</option>
+                    <option>Harvest</option>
+                    <option>Missions</option>
+                  </select>
+                </label>
+                <label>Date
+                  <input id="paymentDate" type="date" required>
+                </label>
+                <label>Amount
+                  <input id="paymentAmount" type="number" min="0" step="0.01" required>
+                </label>
+                <label>Method
+                  <select id="paymentMethod">
+                    <option>Cash</option>
+                    <option>Mobile Money</option>
+                    <option>Bank Transfer</option>
+                    <option>Cheque</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+                <label>Payment Received By
+                  <input id="paymentReceivedBy" autocomplete="name">
+                </label>
+                <label>Reference
+                  <input id="paymentReference">
+                </label>
+                <label class="wide">Notes
+                  <textarea id="paymentNotes"></textarea>
+                </label>
+              </div>
+              <div class="form-actions">
+                <div class="action-group">
+                  <button class="success" type="submit">Save Payment</button>
+                  <button id="newPaymentBtn" type="button">New Payment</button>
+                </div>
+                <button id="deletePaymentBtn" class="danger" type="button">Delete Payment</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <div class="panel-header">
+            <h3 class="section-title"><span class="section-icon">PH</span>Payment History</h3>
+          </div>
+          <div class="panel-body">
+            <div id="paymentTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="attendanceView" class="view hidden">
+        <div class="attendance-hero">
+          <div class="section-title">
+            <span class="section-icon">AT</span>
+            <h3>Church Attendance</h3>
+          </div>
+          <div class="attendance-actions">
+            <button id="viewAttendanceAnalysisBtn" type="button">View Attendance Analysis</button>
+            <button id="showAttendanceFormBtn" class="primary" type="button">Add Attendance Record</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="section-title"><span class="section-icon">FL</span>Filter Attendance Records</h3>
+          </div>
+          <div class="panel-body">
+            <div class="filters-grid">
+              <label>Filter by date
+                <input id="attendanceDateFilter" type="date">
+              </label>
+              <label>Filter by service name
+                <input id="attendanceServiceFilter" placeholder="Filter by service name...">
+              </label>
+              <label>Actions
+                <button id="clearAttendanceFiltersBtn" type="button">Clear Filters</button>
+              </label>
+            </div>
+            <div id="attendanceAnalysisPanel" class="attendance-analysis-panel hidden"></div>
+            <div id="attendanceFormPanel" class="attendance-form-panel hidden">
+              <form id="attendanceForm">
+                <input type="hidden" id="attendanceId">
+                <div class="form-grid">
+                  <label>Service Date*
+                    <input id="serviceDate" type="date" required>
+                  </label>
+                  <label>Service Name/Type*
+                    <input id="serviceName" required placeholder="e.g., Sunday Morning, Youth Meeting">
+                  </label>
+                  <label>Males*
+                    <input id="attendanceMales" type="number" min="0" step="1" value="0" required>
+                  </label>
+                  <label>Females*
+                    <input id="attendanceFemales" type="number" min="0" step="1" value="0" required>
+                  </label>
+                  <label>Children*
+                    <input id="attendanceChildren" type="number" min="0" step="1" value="0" required>
+                  </label>
+                  <label>Total Attendance
+                    <input id="attendanceTotal" type="number" value="0" readonly>
+                  </label>
+                  <label class="wide">Notes
+                    <textarea id="attendanceNotes" placeholder="Optional: any specific details about this service or attendance"></textarea>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button id="cancelAttendanceBtn" type="button">Cancel</button>
+                  <button class="success" type="submit">Add Record</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <div class="panel-header">
+            <div>
+              <h3 class="section-title"><span class="section-icon">AH</span>Attendance History</h3>
+              <small>A list of all recorded attendances. Use filters above to narrow down this list.</small>
+            </div>
+            <div id="attendanceFilteredTotals" class="attendance-summary"></div>
+          </div>
+          <div class="panel-body" id="attendanceHistory"></div>
+        </div>
+      </section>
+
+      <section id="reportsView" class="view hidden">
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="section-title"><span class="section-icon">MD</span>Member Directory</h3>
+          </div>
+          <div class="panel-body" id="directoryReport"></div>
+        </div>
+        <div class="panel" style="margin-top:14px">
+          <div class="panel-header">
+            <h3 class="section-title"><span class="section-icon">GT</span>Giving Totals By Member</h3>
+          </div>
+          <div class="panel-body">
+            <div id="givingReport"></div>
+            <div id="memberPaymentHistory"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="backupView" class="view hidden">
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="section-title"><span class="section-icon">BK</span>Backup and Restore</h3>
+          </div>
+          <div class="panel-body">
+            <div class="backup-row">
+              <button id="exportBtn" class="primary" type="button">Export Backup JSON</button>
+              <label style="display:inline-grid; gap:6px; min-width:260px">Restore Backup
+                <input id="importInput" type="file" accept="application/json,.json">
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const DB_NAME = "tacGhMountOliveOfflineDb";
+    const DB_VERSION = 2;
+    const THEME_KEY = "flockManagerTheme";
+    const CURRENCY_KEY = "flockManagerCurrency";
+    const AUTH_KEY = "flockManagerGoogleUser";
+    const GOOGLE_CLIENT_ID = "915128924380-tel98s833aetfbi9iufe0cke5s3oidge.apps.googleusercontent.com";
+    const DEFAULT_CURRENCY = "GHS";
+    const FALLBACK_CURRENCIES = [
+      "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", "BDT", "BGN", "BHD", "BIF",
+      "BMD", "BND", "BOB", "BRL", "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHF", "CLP", "CNY", "COP", "CRC",
+      "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GHS",
+      "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD", "HNL", "HTG", "HUF", "IDR", "ILS", "INR", "IQD", "IRR", "ISK", "JMD",
+      "JOD", "JPY", "KES", "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL",
+      "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR", "MZN", "NAD",
+      "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD",
+      "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SOS", "SRD", "SSP", "STN", "SYP", "SZL",
+      "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX", "USD", "UYU", "UZS", "VES", "VND",
+      "VUV", "WST", "XAF", "XCD", "XOF", "XPF", "YER", "ZAR", "ZMW", "ZWL"
+    ];
+    const CORE_MINISTRIES = [
+      "Men Ministry",
+      "Women Ministry",
+      "Youth Ministry",
+      "Children Ministry",
+      "Choir",
+      "Ushering Ministry",
+      "Prayer Ministry",
+      "Evangelism Ministry",
+      "Welfare Ministry",
+      "Protocol Ministry",
+      "Media Ministry",
+      "Sunday School",
+      "Hospitality Ministry",
+      "Finance Committee"
+    ];
+    const EDUCATION_LEVELS = [
+      "No Formal Education",
+      "Basic / Primary Education",
+      "Junior High School",
+      "Middle School",
+      "Senior High School",
+      "Technical / Vocational Certificate",
+      "Apprenticeship",
+      "Professional Certificate",
+      "Diploma",
+      "Higher National Diploma (HND)",
+      "Associate Degree",
+      "Bachelor's Degree",
+      "Postgraduate Diploma",
+      "Master's Degree",
+      "Doctorate / PhD",
+      "Other"
+    ];
+    const LEADERSHIP_GROUPS = [
+      {
+        name: "Pastoral Positions",
+        roles: [
+          "Senior Pastor / Lead Pastor",
+          "Associate Pastor",
+          "Executive Pastor",
+          "Worship Pastor",
+          "Youth Pastor",
+          "Children's Pastor",
+          "Discipleship Pastor",
+          "Outreach Pastor",
+          "Teaching Pastor",
+          "Missions Pastor"
+        ]
+      },
+      {
+        name: "Administrative Positions",
+        roles: [
+          "Church Administrator",
+          "Secretary",
+          "Communications Director",
+          "Event Coordinator"
+        ]
+      },
+      {
+        name: "Financial Positions",
+        roles: [
+          "Finance Director / Treasurer",
+          "Bookkeeper"
+        ]
+      },
+      {
+        name: "Support & Volunteer Roles",
+        roles: [
+          "Elder",
+          "Deacon",
+          "Deaconess",
+          "Church Member",
+          "Usher",
+          "Greeter",
+          "Hospitality Team",
+          "Prayer Team",
+          "Tech Team",
+          "Security Team",
+          "Media",
+          "Custodian / Maintenance Staff"
+        ]
+      }
+    ];
+    let selectedCurrency = localStorage.getItem(CURRENCY_KEY) || DEFAULT_CURRENCY;
+    let currentUser = null;
+    const state = { db: null, members: [], payments: [], attendance: [], selectedMemberId: null, selectedPaymentId: null, selectedReportMemberId: null, photoData: "", cameraStream: null };
+
+    const $ = (id) => document.getElementById(id);
+    const today = () => new Date().toISOString().slice(0, 10);
+    const money = (value) => {
+      try {
+        return new Intl.NumberFormat(undefined, { style: "currency", currency: selectedCurrency }).format(Number(value || 0));
+      } catch (error) {
+        selectedCurrency = DEFAULT_CURRENCY;
+        localStorage.setItem(CURRENCY_KEY, selectedCurrency);
+        return new Intl.NumberFormat("en-GH", { style: "currency", currency: DEFAULT_CURRENCY }).format(Number(value || 0));
+      }
+    };
+    const fullName = (m) => [m.firstName, m.middleName, m.lastName].filter(Boolean).join(" ").trim() || "Unnamed member";
+    const setStatus = (text) => { $("statusText").textContent = text; };
+
+    function googleClientIsConfigured() {
+      return GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes("YOUR_GOOGLE_CLIENT_ID");
+    }
+
+    function parseJwt(token) {
+      const payload = token.split(".")[1];
+      const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+      return JSON.parse(decodeURIComponent(atob(normalized).split("").map(char => {
+        return "%" + ("00" + char.charCodeAt(0).toString(16)).slice(-2);
+      }).join("")));
+    }
+
+    function setAuthMessage(message = "") {
+      $("authMessage").textContent = message;
+    }
+
+    function renderAuthState() {
+      const saved = localStorage.getItem(AUTH_KEY);
+      try {
+        currentUser = saved ? JSON.parse(saved) : null;
+      } catch (error) {
+        localStorage.removeItem(AUTH_KEY);
+        currentUser = null;
+      }
+      $("authLanding").classList.toggle("hidden", Boolean(currentUser));
+      $("appShell").classList.toggle("hidden", !currentUser);
+      $("signedInUser").innerHTML = currentUser
+        ? `Signed in as<br><strong>${escapeHtml(currentUser.name || currentUser.email || "Google user")}</strong>${currentUser.email ? `<br>${escapeHtml(currentUser.email)}` : ""}`
+        : "";
+    }
+
+    function handleGoogleCredential(response) {
+      try {
+        const profile = parseJwt(response.credential);
+        const user = {
+          name: profile.name || "",
+          email: profile.email || "",
+          picture: profile.picture || "",
+          signedInAt: new Date().toISOString()
+        };
+        localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+        setAuthMessage("");
+        renderAuthState();
+        setStatus(`Signed in as ${user.email || user.name || "Google user"}.`);
+      } catch (error) {
+        console.error(error);
+        setAuthMessage("Google sign-in could not be completed. Please try again.");
+      }
+    }
+
+    window.handleGoogleCredential = handleGoogleCredential;
+
+    function requestGoogleSignIn() {
+      if (!googleClientIsConfigured()) {
+        setAuthMessage("Add your Google OAuth Client ID in GOOGLE_CLIENT_ID before deploying sign-in.");
+        return;
+      }
+      if (!window.google?.accounts?.id) {
+        setAuthMessage("Google sign-in is still loading. Please try again in a moment.");
+        return;
+      }
+      google.accounts.id.prompt(notification => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          setAuthMessage("Google sign-in was not displayed. Check your OAuth Client ID and authorized domain.");
+        }
+      });
+    }
+
+    function initGoogleSignIn() {
+      if (!googleClientIsConfigured()) {
+        setAuthMessage("Add your Google OAuth Client ID in GOOGLE_CLIENT_ID before deploying sign-in.");
+        $("googleSignUpSlot").classList.add("hidden");
+        $("googleSignInSlot").classList.add("hidden");
+        $("googleSignUpBtn").classList.remove("hidden");
+        $("googleSignInBtn").classList.remove("hidden");
+        return;
+      }
+      if (!window.google?.accounts?.id) {
+        setTimeout(initGoogleSignIn, 250);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+      $("googleSignUpBtn").classList.add("hidden");
+      $("googleSignInBtn").classList.add("hidden");
+      $("googleSignUpSlot").classList.remove("hidden");
+      $("googleSignInSlot").classList.remove("hidden");
+      google.accounts.id.renderButton($("googleSignUpSlot"), {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "signup_with",
+        shape: "rectangular",
+        logo_alignment: "left",
+        width: 230
+      });
+      google.accounts.id.renderButton($("googleSignInSlot"), {
+        type: "standard",
+        theme: "filled_blue",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        logo_alignment: "left",
+        width: 230
+      });
+    }
+
+    function signOut() {
+      if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
+      localStorage.removeItem(AUTH_KEY);
+      renderAuthState();
+      setAuthMessage("");
+    }
+
+    function currencyCodes() {
+      const supported = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("currency") : [];
+      return [...new Set([DEFAULT_CURRENCY, ...supported, ...FALLBACK_CURRENCIES])].sort((a, b) => a.localeCompare(b));
+    }
+
+    function currencyLabel(code) {
+      try {
+        const name = new Intl.DisplayNames([navigator.language || "en"], { type: "currency" }).of(code);
+        return name ? `${code} - ${name}` : code;
+      } catch (error) {
+        return code;
+      }
+    }
+
+    function renderCurrencyOptions() {
+      const codes = currencyCodes();
+      if (!codes.includes(selectedCurrency)) selectedCurrency = DEFAULT_CURRENCY;
+      $("currencySelect").innerHTML = codes
+        .map(code => `<option value="${code}"${code === selectedCurrency ? " selected" : ""}>${escapeHtml(currencyLabel(code))}</option>`)
+        .join("");
+    }
+
+    function setCurrency(code) {
+      selectedCurrency = code || DEFAULT_CURRENCY;
+      localStorage.setItem(CURRENCY_KEY, selectedCurrency);
+      renderEverything();
+      setStatus(`Currency set to ${selectedCurrency}.`);
+    }
+
+    function allMinistries() {
+      return [...new Set([...CORE_MINISTRIES, ...state.members.map(m => m.ministry).filter(Boolean)])]
+        .sort((a, b) => a.localeCompare(b));
+    }
+
+    function applyTheme(theme) {
+      const selectedTheme = theme === "dark" ? "dark" : "light";
+      const isDark = selectedTheme === "dark";
+      document.documentElement.dataset.theme = selectedTheme;
+      $("themeToggle").setAttribute("aria-pressed", String(isDark));
+      $("themeToggleText").textContent = isDark ? "Dark Mode" : "Light Mode";
+      document.querySelector(".theme-icon").textContent = isDark ? "☾" : "☀";
+      localStorage.setItem(THEME_KEY, selectedTheme);
+    }
+
+    function toggleTheme() {
+      applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+    }
+
+    function openDb() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains("members")) {
+            const members = db.createObjectStore("members", { keyPath: "id", autoIncrement: true });
+            members.createIndex("lastName", "lastName");
+            members.createIndex("membershipStatus", "membershipStatus");
+          }
+          if (!db.objectStoreNames.contains("payments")) {
+            const payments = db.createObjectStore("payments", { keyPath: "id", autoIncrement: true });
+            payments.createIndex("memberId", "memberId");
+            payments.createIndex("paymentType", "paymentType");
+            payments.createIndex("paymentDate", "paymentDate");
+          }
+          if (!db.objectStoreNames.contains("attendance")) {
+            const attendance = db.createObjectStore("attendance", { keyPath: "id", autoIncrement: true });
+            attendance.createIndex("serviceDate", "serviceDate");
+            attendance.createIndex("serviceName", "serviceName");
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function tx(storeName, mode = "readonly") {
+      return state.db.transaction(storeName, mode).objectStore(storeName);
+    }
+
+    function getAll(storeName) {
+      return new Promise((resolve, reject) => {
+        const request = tx(storeName).getAll();
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function put(storeName, record) {
+      return new Promise((resolve, reject) => {
+        const request = tx(storeName, "readwrite").put(record);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function remove(storeName, id) {
+      return new Promise((resolve, reject) => {
+        const request = tx(storeName, "readwrite").delete(Number(id));
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function clearStore(storeName) {
+      return new Promise((resolve, reject) => {
+        const request = tx(storeName, "readwrite").clear();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function refresh() {
+      state.members = (await getAll("members")).sort((a, b) => fullName(a).localeCompare(fullName(b)));
+      state.payments = (await getAll("payments")).sort((a, b) => (b.paymentDate || "").localeCompare(a.paymentDate || ""));
+      state.attendance = (await getAll("attendance")).sort((a, b) => (b.serviceDate || "").localeCompare(a.serviceDate || ""));
+      renderEverything();
+    }
+
+    function renderEverything() {
+      renderMetrics();
+      renderDashboard();
+      renderMinistrySelectOptions();
+      renderMemberList();
+      renderPaymentMembers();
+      renderPaymentTable();
+      renderAttendance();
+      renderReports();
+    }
+
+    function renderMetrics() {
+      const tithes = state.payments.filter(p => p.paymentType === "Tithe").reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      const welfare = state.payments.filter(p => p.paymentType === "Welfare").reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      const giving = state.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      $("metricMembers").textContent = state.members.length;
+      $("metricTithes").textContent = money(tithes);
+      $("metricWelfare").textContent = money(welfare);
+      $("metricGiving").textContent = money(giving);
+    }
+
+    function renderDashboard() {
+      renderMinistryOverview();
+      renderFinanceOverview();
+      renderRecentMembers();
+      renderRecentPayments();
+    }
+
+    function renderMinistryOverview() {
+      const target = $("ministryOverview");
+      if (!state.members.length) {
+        target.innerHTML = `<div class="empty">No members saved yet.</div>`;
+        return;
+      }
+      const counts = new Map();
+      for (const member of state.members) {
+        const ministry = member.ministry || "Unassigned";
+        counts.set(ministry, (counts.get(ministry) || 0) + 1);
+      }
+      const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+      const max = Math.max(...rows.map(row => row[1]), 1);
+      target.innerHTML = `<div class="insight-list">${rows.map(([name, count]) => `
+        <div class="insight-row">
+          <div>
+            <strong>${escapeHtml(name)}</strong>
+            <small>${count} member${count === 1 ? "" : "s"}</small>
+            <div class="bar"><span style="width:${Math.max(8, Math.round((count / max) * 100))}%"></span></div>
+          </div>
+          <strong>${count}</strong>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function renderFinanceOverview() {
+      const target = $("financeOverview");
+      if (!state.payments.length) {
+        target.innerHTML = `<div class="empty">No payments recorded yet.</div>`;
+        return;
+      }
+      const totals = new Map();
+      for (const payment of state.payments) {
+        const type = payment.paymentType || "Other";
+        totals.set(type, (totals.get(type) || 0) + Number(payment.amount || 0));
+      }
+      const rows = [...totals.entries()].sort((a, b) => b[1] - a[1]);
+      const grandTotal = rows.reduce((sum, row) => sum + row[1], 0);
+      target.innerHTML = `<div class="insight-list">${rows.map(([type, total]) => `
+        <div class="insight-row">
+          <div>
+            <strong>${escapeHtml(type)}</strong>
+            <small>${grandTotal ? Math.round((total / grandTotal) * 100) : 0}% of total finance</small>
+            <div class="bar"><span style="width:${grandTotal ? Math.max(8, Math.round((total / grandTotal) * 100)) : 8}%"></span></div>
+          </div>
+          <strong>${money(total)}</strong>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function renderRecentMembers() {
+      const target = $("recentMembers");
+      const members = [...state.members]
+        .sort((a, b) => (b.createdAt || b.updatedAt || "").localeCompare(a.createdAt || a.updatedAt || ""))
+        .slice(0, 5);
+      if (!members.length) {
+        target.innerHTML = `<div class="empty">No recent members.</div>`;
+        return;
+      }
+      target.innerHTML = `<div class="insight-list">${members.map(member => `
+        <div class="insight-row">
+          <div>
+            <strong>${escapeHtml(fullName(member))}</strong>
+            <small>${escapeHtml(member.ministry || member.location || member.membershipStatus || "Member")}</small>
+          </div>
+          <button type="button" data-open-member="${member.id}">Open</button>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function renderRecentPayments() {
+      const target = $("recentPayments");
+      const payments = state.payments.slice(0, 5);
+      if (!payments.length) {
+        target.innerHTML = `<div class="empty">No recent payments.</div>`;
+        return;
+      }
+      target.innerHTML = `<div class="insight-list">${payments.map(payment => {
+        const member = state.members.find(m => m.id === payment.memberId);
+        return `
+          <div class="insight-row">
+            <div>
+              <strong>${escapeHtml(payment.paymentType || "Payment")} - ${money(payment.amount)}</strong>
+              <small>${escapeHtml(member ? fullName(member) : "Unknown member")} · ${escapeHtml(payment.paymentDate || "")}</small>
+            </div>
+            <button type="button" data-open-payment="${payment.id}">Open</button>
+          </div>
+        `;
+      }).join("")}</div>`;
+    }
+
+    function renderMemberList() {
+      const query = $("memberSearch").value.trim().toLowerCase();
+      const ministryFilter = $("memberMinistryFilter").value;
+      const statusFilter = $("memberStatusFilter").value;
+      const viewMode = $("memberViewMode").value || "list";
+      const list = $("memberList");
+      renderMemberFilterOptions();
+      const members = state.members.filter(m => {
+        const text = [
+          fullName(m),
+          m.phoneNumber,
+          m.whatsappNumber,
+          m.email,
+          m.location,
+          m.ministry,
+          m.profession,
+          m.educationLevel,
+          ...(m.leadershipPositions || []),
+          m.membershipStatus
+        ].join(" ").toLowerCase();
+        const matchesSearch = text.includes(query);
+        const matchesMinistry = !ministryFilter || (m.ministry || "") === ministryFilter;
+        const matchesStatus = !statusFilter || (m.membershipStatus || "") === statusFilter;
+        return matchesSearch && matchesMinistry && matchesStatus;
+      });
+      if (!members.length) {
+        list.innerHTML = `<div class="empty">No members found.</div>`;
+        return;
+      }
+      if (viewMode === "cards") {
+        list.innerHTML = `<div class="member-cards">${members.map(m => `
+          <div class="member-card">
+            ${m.photoData ? `<img class="avatar" src="${m.photoData}" alt="">` : `<div class="avatar"></div>`}
+            <div>
+              <strong>${escapeHtml(fullName(m))}</strong>
+              <small>${escapeHtml(m.ministry || "No ministry assigned")}</small>
+              <small>${escapeHtml(m.whatsappNumber || m.phoneNumber || "No contact yet")}</small>
+              <small>${escapeHtml(m.location || "")} ${m.membershipStatus ? "· " + escapeHtml(m.membershipStatus) : ""}</small>
+              <button type="button" data-member-id="${m.id}">View / Edit</button>
+            </div>
+          </div>
+        `).join("")}</div>`;
+        return;
+      }
+      list.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Ministry</th><th>WhatsApp</th><th>Phone</th><th>Location</th><th>Status</th><th></th></tr></thead>
+            <tbody>${members.map(m => `
+              <tr>
+                <td>${escapeHtml(fullName(m))}</td>
+                <td>${escapeHtml(m.ministry || "")}</td>
+                <td>${escapeHtml(m.whatsappNumber || "")}</td>
+                <td>${escapeHtml(m.phoneNumber || "")}</td>
+                <td>${escapeHtml(m.location || "")}</td>
+                <td>${escapeHtml(m.membershipStatus || "")}</td>
+                <td><button type="button" data-member-id="${m.id}">View / Edit</button></td>
+              </tr>
+            `).join("")}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderMemberFilterOptions() {
+      const ministrySelect = $("memberMinistryFilter");
+      const statusSelect = $("memberStatusFilter");
+      const currentMinistry = ministrySelect.value;
+      const currentStatus = statusSelect.value;
+      const ministries = allMinistries();
+      const statuses = [...new Set(state.members.map(m => m.membershipStatus).filter(Boolean))].sort();
+      ministrySelect.innerHTML = `<option value="">All Ministries</option>` + ministries.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+      statusSelect.innerHTML = `<option value="">All Statuses</option>` + statuses.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+      ministrySelect.value = ministries.includes(currentMinistry) ? currentMinistry : "";
+      statusSelect.value = statuses.includes(currentStatus) ? currentStatus : "";
+    }
+
+    function renderMinistrySelectOptions() {
+      const select = $("ministry");
+      const current = select.value;
+      select.innerHTML = `<option value=""></option>` + allMinistries().map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+      select.value = current;
+    }
+
+    function renderEducationOptions() {
+      const select = $("educationLevel");
+      const current = select.value;
+      select.innerHTML = `<option value=""></option>` + EDUCATION_LEVELS.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+      select.value = EDUCATION_LEVELS.includes(current) ? current : "";
+    }
+
+    function renderLeadershipOptions() {
+      $("leadershipOptions").innerHTML = LEADERSHIP_GROUPS.map(group => `
+        <div class="leadership-group">
+          <h5>${escapeHtml(group.name)}</h5>
+          <div class="checkbox-grid">
+            ${group.roles.map(role => `
+              <label class="check-option">
+                <input type="checkbox" name="leadershipPositions" value="${escapeHtml(role)}">
+                <span>${escapeHtml(role)}</span>
+              </label>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function selectedLeadershipPositions() {
+      return [...document.querySelectorAll("input[name='leadershipPositions']:checked")].map(input => input.value);
+    }
+
+    function setLeadershipPositions(positions = []) {
+      const selected = new Set(Array.isArray(positions) ? positions : []);
+      document.querySelectorAll("input[name='leadershipPositions']").forEach(input => {
+        input.checked = selected.has(input.value);
+      });
+    }
+
+    function renderPaymentMembers() {
+      const select = $("paymentMember");
+      const current = select.value;
+      select.innerHTML = `<option value="">Select member</option>` + state.members.map(m => `<option value="${m.id}">${escapeHtml(fullName(m))}</option>`).join("");
+      select.value = current;
+    }
+
+    function renderPaymentTable() {
+      const target = $("paymentTable");
+      if (!state.payments.length) {
+        target.innerHTML = `<div class="empty">No payments recorded.</div>`;
+        return;
+      }
+      target.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Member</th><th>Type</th><th>Method</th><th>Received By</th><th>Reference</th><th>Amount</th><th></th></tr></thead>
+            <tbody>
+              ${state.payments.map(p => {
+                const m = state.members.find(member => member.id === p.memberId);
+                return `<tr>
+                  <td>${escapeHtml(p.paymentDate || "")}</td>
+                  <td>${escapeHtml(m ? fullName(m) : "Unknown member")}</td>
+                  <td>${escapeHtml(p.paymentType || "")}</td>
+                  <td>${escapeHtml(p.paymentMethod || "")}</td>
+                  <td>${escapeHtml(p.receivedBy || "")}</td>
+                  <td>${escapeHtml(p.reference || "")}</td>
+                  <td>${money(p.amount)}</td>
+                  <td><button type="button" data-payment-id="${p.id}">Edit</button></td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function attendanceTotal(record) {
+      return Number(record.males || 0) + Number(record.females || 0) + Number(record.children || 0);
+    }
+
+    function displayDate(value) {
+      if (!value) return "";
+      const date = new Date(`${value}T00:00:00`);
+      return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    }
+
+    function filteredAttendanceRecords() {
+      const dateFilter = $("attendanceDateFilter").value;
+      const serviceFilter = $("attendanceServiceFilter").value.trim().toLowerCase();
+      return state.attendance.filter(record => {
+        const matchesDate = !dateFilter || record.serviceDate === dateFilter;
+        const matchesService = !serviceFilter || (record.serviceName || "").toLowerCase().includes(serviceFilter);
+        return matchesDate && matchesService;
+      });
+    }
+
+    function renderAttendance() {
+      const records = filteredAttendanceRecords();
+      const totals = records.reduce((summary, record) => {
+        summary.males += Number(record.males || 0);
+        summary.females += Number(record.females || 0);
+        summary.children += Number(record.children || 0);
+        return summary;
+      }, { males: 0, females: 0, children: 0 });
+      const grandTotal = totals.males + totals.females + totals.children;
+      $("attendanceFilteredTotals").innerHTML = `
+        <span>Totals for filtered period</span>
+        <span>Males: ${totals.males}, Females: ${totals.females}, Children: ${totals.children}</span>
+        <strong>Grand Total: ${grandTotal}</strong>
+      `;
+      $("attendanceHistory").innerHTML = records.length ? records.map(record => `
+        <div class="attendance-record-row">
+          <div><strong>${escapeHtml(displayDate(record.serviceDate))}</strong></div>
+          <div><strong>${escapeHtml(record.serviceName || "Service")}</strong></div>
+          <div class="attendance-counts">M: ${Number(record.males || 0)}, F: ${Number(record.females || 0)}, C: ${Number(record.children || 0)}</div>
+          <div class="attendance-total">Total: ${attendanceTotal(record)}</div>
+          <div><small>${escapeHtml(record.notes || "")}</small></div>
+          <button class="danger" type="button" data-attendance-id="${record.id}">Delete</button>
+        </div>
+      `).join("") : `<div class="empty">No attendance records found.</div>`;
+      renderAttendanceAnalysis();
+    }
+
+    function renderAttendanceAnalysis() {
+      const records = filteredAttendanceRecords();
+      const totals = records.reduce((summary, record) => {
+        summary.males += Number(record.males || 0);
+        summary.females += Number(record.females || 0);
+        summary.children += Number(record.children || 0);
+        return summary;
+      }, { males: 0, females: 0, children: 0 });
+      const grandTotal = totals.males + totals.females + totals.children;
+      const average = records.length ? Math.round(grandTotal / records.length) : 0;
+      $("attendanceAnalysisPanel").innerHTML = `
+        <div class="attendance-analysis-grid">
+          <div class="metric"><span>Services Recorded</span><strong>${records.length}</strong></div>
+          <div class="metric"><span>Total Attendance</span><strong>${grandTotal}</strong></div>
+          <div class="metric"><span>Average Attendance</span><strong>${average}</strong></div>
+          <div class="metric"><span>Children</span><strong>${totals.children}</strong></div>
+        </div>
+      `;
+    }
+
+    function updateAttendanceTotal() {
+      const total = Number($("attendanceMales").value || 0) + Number($("attendanceFemales").value || 0) + Number($("attendanceChildren").value || 0);
+      $("attendanceTotal").value = total;
+    }
+
+    function blankAttendanceForm() {
+      $("attendanceForm").reset();
+      $("attendanceId").value = "";
+      $("serviceDate").value = today();
+      $("attendanceMales").value = 0;
+      $("attendanceFemales").value = 0;
+      $("attendanceChildren").value = 0;
+      updateAttendanceTotal();
+    }
+
+    async function saveAttendance(event) {
+      event.preventDefault();
+      const id = $("attendanceId").value ? Number($("attendanceId").value) : null;
+      const record = {
+        serviceDate: $("serviceDate").value,
+        serviceName: $("serviceName").value.trim(),
+        males: Number($("attendanceMales").value || 0),
+        females: Number($("attendanceFemales").value || 0),
+        children: Number($("attendanceChildren").value || 0),
+        notes: $("attendanceNotes").value.trim(),
+        updatedAt: new Date().toISOString(),
+        createdAt: id ? (state.attendance.find(a => a.id === id)?.createdAt || new Date().toISOString()) : new Date().toISOString()
+      };
+      if (id) record.id = id;
+      await put("attendance", record);
+      await refresh();
+      blankAttendanceForm();
+      $("attendanceFormPanel").classList.add("hidden");
+      setStatus("Attendance record saved.");
+    }
+
+    async function deleteAttendance(id) {
+      if (!confirm("Delete this attendance record?")) return;
+      await remove("attendance", id);
+      await refresh();
+      setStatus("Attendance record deleted.");
+    }
+
+    function renderReports() {
+      $("directoryReport").innerHTML = state.members.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Ministry</th><th>Profession</th><th>Education</th><th>WhatsApp</th><th>Phone</th><th>Location</th><th>Status</th></tr></thead>
+            <tbody>${state.members.map(m => `<tr><td>${escapeHtml(fullName(m))}</td><td>${escapeHtml(m.ministry || "")}</td><td>${escapeHtml(m.profession || "")}</td><td>${escapeHtml(m.educationLevel || "")}</td><td>${escapeHtml(m.whatsappNumber || "")}</td><td>${escapeHtml(m.phoneNumber || "")}</td><td>${escapeHtml(m.location || "")}</td><td>${escapeHtml(m.membershipStatus || "")}</td></tr>`).join("")}</tbody>
+          </table>
+        </div>` : `<div class="empty">No members yet.</div>`;
+
+      const rows = state.members.map(m => {
+        const payments = state.payments.filter(p => p.memberId === m.id);
+        const tithe = payments.filter(p => p.paymentType === "Tithe").reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        const welfare = payments.filter(p => p.paymentType === "Welfare").reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        return { id: m.id, name: fullName(m), paymentCount: payments.length, tithe, welfare, total };
+      });
+      $("givingReport").innerHTML = rows.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Member</th><th>Payments</th><th>Total Tithes</th><th>Total Welfare</th><th>Total Giving</th></tr></thead>
+            <tbody>${rows.map(r => `<tr>
+              <td><button class="link-button" type="button" data-report-member-id="${r.id}">${escapeHtml(r.name)}</button></td>
+              <td>${r.paymentCount}</td>
+              <td>${money(r.tithe)}</td>
+              <td>${money(r.welfare)}</td>
+              <td>${money(r.total)}</td>
+            </tr>`).join("")}</tbody>
+          </table>
+        </div>` : `<div class="empty">No giving records yet.</div>`;
+      renderMemberPaymentHistory();
+    }
+
+    function renderMemberPaymentHistory() {
+      const target = $("memberPaymentHistory");
+      const member = state.members.find(m => m.id === Number(state.selectedReportMemberId));
+      if (!member) {
+        target.innerHTML = `<div class="report-detail"><div class="empty">Click a member name above to view payment history.</div></div>`;
+        return;
+      }
+      const payments = state.payments
+        .filter(p => p.memberId === member.id)
+        .sort((a, b) => (b.paymentDate || "").localeCompare(a.paymentDate || ""));
+      const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      target.innerHTML = `
+        <div class="report-detail">
+          <div class="report-detail-header">
+            <div>
+              <h4>${escapeHtml(fullName(member))}</h4>
+              <small>${payments.length} payment${payments.length === 1 ? "" : "s"} recorded - Total giving ${money(total)}</small>
+            </div>
+            <button type="button" data-close-report-history>Close</button>
+          </div>
+          <div class="report-detail-body">
+            ${payments.length ? `
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Date</th><th>Type</th><th>Method</th><th>Received By</th><th>Reference</th><th>Notes</th><th>Amount</th></tr></thead>
+                  <tbody>${payments.map(p => `<tr>
+                    <td>${escapeHtml(p.paymentDate || "")}</td>
+                    <td>${escapeHtml(p.paymentType || "")}</td>
+                    <td>${escapeHtml(p.paymentMethod || "")}</td>
+                    <td>${escapeHtml(p.receivedBy || "")}</td>
+                    <td>${escapeHtml(p.reference || "")}</td>
+                    <td>${escapeHtml(p.notes || "")}</td>
+                    <td>${money(p.amount)}</td>
+                  </tr>`).join("")}</tbody>
+                </table>
+              </div>
+            ` : `<div class="empty">No payment history found for this member.</div>`}
+          </div>
+        </div>
+      `;
+    }
+
+    function blankMemberForm() {
+      state.selectedMemberId = null;
+      state.photoData = "";
+      $("memberForm").reset();
+      $("memberId").value = "";
+      $("membershipStatus").value = "Active";
+      setLeadershipPositions([]);
+      $("memberFormTitle").textContent = "New Member";
+      updatePhotoPreview();
+      renderMemberList();
+      setStatus("Ready for a new member.");
+    }
+
+    function loadMember(id) {
+      const member = state.members.find(m => m.id === Number(id));
+      if (!member) return;
+      state.selectedMemberId = member.id;
+      state.photoData = member.photoData || "";
+      $("memberId").value = member.id;
+      [
+        "memberCode", "firstName", "middleName", "lastName", "gender", "dateOfBirth", "dateJoined", "maritalStatus",
+        "occupation", "educationLevel", "ministry", "phoneNumber", "whatsappNumber", "email", "location", "homeAddress",
+        "nextOfKinName", "nextOfKinPhone", "nextOfKinRelationship", "emergencyName",
+        "emergencyPhone", "notes", "membershipStatus"
+      ].forEach(id => { $(id).value = member[id] || ""; });
+      setLeadershipPositions(member.leadershipPositions);
+      $("memberFormTitle").textContent = `Editing: ${fullName(member)}`;
+      updatePhotoPreview();
+      renderMemberList();
+      setStatus("Member loaded for editing.");
+    }
+
+    async function saveMember(event) {
+      if (event) event.preventDefault();
+      const id = $("memberId").value ? Number($("memberId").value) : null;
+      const record = {
+        memberCode: $("memberCode").value.trim(),
+        firstName: $("firstName").value.trim(),
+        middleName: $("middleName").value.trim(),
+        lastName: $("lastName").value.trim(),
+        gender: $("gender").value,
+        dateOfBirth: $("dateOfBirth").value,
+        dateJoined: $("dateJoined").value,
+        maritalStatus: $("maritalStatus").value,
+        occupation: $("occupation").value.trim(),
+        profession: id ? (state.members.find(m => m.id === id)?.profession || "") : "",
+        educationLevel: $("educationLevel").value,
+        leadershipPositions: selectedLeadershipPositions(),
+        ministry: $("ministry").value,
+        phoneNumber: $("phoneNumber").value.trim(),
+        whatsappNumber: $("whatsappNumber").value.trim(),
+        email: $("email").value.trim(),
+        location: $("location").value.trim(),
+        homeAddress: $("homeAddress").value.trim(),
+        nextOfKinName: $("nextOfKinName").value.trim(),
+        nextOfKinPhone: $("nextOfKinPhone").value.trim(),
+        nextOfKinRelationship: $("nextOfKinRelationship").value.trim(),
+        emergencyName: $("emergencyName").value.trim(),
+        emergencyPhone: $("emergencyPhone").value.trim(),
+        notes: $("notes").value.trim(),
+        membershipStatus: $("membershipStatus").value,
+        photoData: state.photoData,
+        updatedAt: new Date().toISOString(),
+        createdAt: id ? (state.members.find(m => m.id === id)?.createdAt || new Date().toISOString()) : new Date().toISOString()
+      };
+      if (id) record.id = id;
+      try {
+        const savedId = await put("members", record);
+        await refresh();
+        loadMember(savedId);
+        setStatus("Member saved successfully.");
+        alert("Member details saved successfully.");
+      } catch (error) {
+        console.error(error);
+        setStatus("Member could not be saved.");
+        alert("Member details could not be saved: " + error.message);
+      }
+    }
+
+    async function deleteMember() {
+      const id = Number($("memberId").value);
+      if (!id) return setStatus("No member selected.");
+      if (!confirm("Delete this member and their payment records?")) return;
+      await remove("members", id);
+      for (const payment of state.payments.filter(p => p.memberId === id)) await remove("payments", payment.id);
+      await refresh();
+      blankMemberForm();
+      setStatus("Member deleted.");
+    }
+
+    function updatePhotoPreview() {
+      $("photoPreview").innerHTML = state.photoData ? `<img src="${state.photoData}" alt="Member photo">` : "No photo selected";
+    }
+
+    async function startCamera() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus("Camera capture is not supported in this browser.");
+        alert("Camera capture is not supported in this browser.");
+        return;
+      }
+      try {
+        stopCamera();
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 900 }, height: { ideal: 1200 } },
+          audio: false
+        });
+        state.cameraStream = stream;
+        $("cameraPreview").srcObject = stream;
+        $("cameraPanel").classList.remove("hidden");
+        setStatus("Camera ready. Click Take Photo when the picture looks right.");
+      } catch (error) {
+        console.error(error);
+        setStatus("Camera could not be opened.");
+        alert("Camera could not be opened. Please allow camera permission and try again.");
+      }
+    }
+
+    function stopCamera() {
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach(track => track.stop());
+        state.cameraStream = null;
+      }
+      $("cameraPreview").srcObject = null;
+      $("cameraPanel").classList.add("hidden");
+    }
+
+    function captureCameraPhoto() {
+      const video = $("cameraPreview");
+      if (!state.cameraStream || !video.videoWidth || !video.videoHeight) {
+        setStatus("Camera is not ready yet.");
+        return;
+      }
+      const canvas = $("cameraCanvas");
+      const size = Math.min(video.videoWidth, video.videoHeight);
+      const sourceX = Math.max(0, Math.round((video.videoWidth - size) / 2));
+      const sourceY = Math.max(0, Math.round((video.videoHeight - size) / 2));
+      canvas.width = 900;
+      canvas.height = 900;
+      const context = canvas.getContext("2d");
+      context.drawImage(video, sourceX, sourceY, size, size, 0, 0, canvas.width, canvas.height);
+      state.photoData = canvas.toDataURL("image/jpeg", 0.88);
+      $("photoInput").value = "";
+      updatePhotoPreview();
+      stopCamera();
+      setStatus("Camera photo captured. Click Save Member to keep it.");
+    }
+
+    function readPhoto(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function blankPaymentForm() {
+      state.selectedPaymentId = null;
+      $("paymentForm").reset();
+      $("paymentId").value = "";
+      $("paymentDate").value = today();
+      $("deletePaymentBtn").disabled = true;
+      setStatus("Ready for a new payment.");
+    }
+
+    function loadPayment(id) {
+      const p = state.payments.find(payment => payment.id === Number(id));
+      if (!p) return;
+      state.selectedPaymentId = p.id;
+      $("paymentId").value = p.id;
+      $("paymentMember").value = p.memberId;
+      $("paymentType").value = p.paymentType || "Tithe";
+      $("paymentDate").value = p.paymentDate || today();
+      $("paymentAmount").value = p.amount || "";
+      $("paymentMethod").value = p.paymentMethod || "Cash";
+      $("paymentReceivedBy").value = p.receivedBy || "";
+      $("paymentReference").value = p.reference || "";
+      $("paymentNotes").value = p.notes || "";
+      $("deletePaymentBtn").disabled = false;
+      setView("payments");
+      setStatus("Payment loaded for editing.");
+    }
+
+    async function savePayment(event) {
+      event.preventDefault();
+      const id = $("paymentId").value ? Number($("paymentId").value) : null;
+      const record = {
+        memberId: Number($("paymentMember").value),
+        paymentType: $("paymentType").value,
+        paymentDate: $("paymentDate").value,
+        amount: Number($("paymentAmount").value || 0),
+        paymentMethod: $("paymentMethod").value,
+        receivedBy: $("paymentReceivedBy").value.trim(),
+        reference: $("paymentReference").value.trim(),
+        notes: $("paymentNotes").value.trim(),
+        updatedAt: new Date().toISOString(),
+        createdAt: id ? (state.payments.find(p => p.id === id)?.createdAt || new Date().toISOString()) : new Date().toISOString()
+      };
+      if (id) record.id = id;
+      const savedId = await put("payments", record);
+      await refresh();
+      loadPayment(savedId);
+      setStatus("Payment saved.");
+    }
+
+    async function deletePayment() {
+      const id = Number($("paymentId").value);
+      if (!id) return setStatus("No payment selected.");
+      if (!confirm("Delete this payment?")) return;
+      await remove("payments", id);
+      await refresh();
+      blankPaymentForm();
+      setStatus("Payment deleted.");
+    }
+
+    function setView(view) {
+      if (view !== "createMember") stopCamera();
+      document.querySelectorAll(".view").forEach(section => section.classList.add("hidden"));
+      document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.view === view));
+      $(`${view}View`).classList.remove("hidden");
+      $("viewTitle").textContent = { dashboard: "Dashboard", createMember: "Create New Member", members: "Members", payments: "Payments", attendance: "Attendance", reports: "Reports", backup: "Backup" }[view];
+    }
+
+    function backupPayload() {
+      return {
+        app: "Flock Manager",
+        exportedAt: new Date().toISOString(),
+        members: state.members,
+        payments: state.payments,
+        attendance: state.attendance
+      };
+    }
+
+    function backupFileName() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const date = String(now.getDate()).padStart(2, "0");
+      const code = [
+        String(now.getHours()).padStart(2, "0"),
+        String(now.getMinutes()).padStart(2, "0"),
+        String(now.getSeconds()).padStart(2, "0")
+      ].join("");
+      return `flock-manager-backup-${year}-${month}-${date}-${code}.json`;
+    }
+
+    async function exportBackup() {
+      const fileName = backupFileName();
+      const blob = new Blob([JSON.stringify(backupPayload(), null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+      setStatus(`Backup exported as ${fileName}.`);
+    }
+
+    async function saveAllDataToFolder() {
+      const fileName = backupFileName();
+      const backupText = JSON.stringify(backupPayload(), null, 2);
+      if (!window.showDirectoryPicker) {
+        const blob = new Blob([backupText], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+        setStatus(`Browser cannot choose a folder, so ${fileName} was downloaded.`);
+        alert("This browser cannot save directly to a selected folder. The backup has been downloaded instead.");
+        return;
+      }
+      try {
+        const directoryHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+        const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(backupText);
+        await writable.close();
+        setStatus(`All data saved as ${fileName}.`);
+        alert(`All data saved successfully as ${fileName}.`);
+      } catch (error) {
+        if (error.name === "AbortError") {
+          setStatus("Save all data cancelled.");
+          return;
+        }
+        console.error(error);
+        setStatus("All data could not be saved.");
+        alert("All data could not be saved: " + error.message);
+      }
+    }
+
+    async function importBackup(file) {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      if (!Array.isArray(payload.members) || !Array.isArray(payload.payments)) throw new Error("Backup file is not valid.");
+      if (!confirm("Restore this backup? It will replace the current offline data in this browser.")) return;
+      await clearStore("members");
+      await clearStore("payments");
+      await clearStore("attendance");
+      for (const member of payload.members) await put("members", member);
+      for (const payment of payload.payments) await put("payments", payment);
+      for (const attendanceRecord of (payload.attendance || [])) await put("attendance", attendanceRecord);
+      await refresh();
+      blankMemberForm();
+      blankPaymentForm();
+      blankAttendanceForm();
+      setStatus("Backup restored.");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    }
+
+    function bindEvents() {
+      $("googleSignUpBtn").addEventListener("click", requestGoogleSignIn);
+      $("googleSignInBtn").addEventListener("click", requestGoogleSignIn);
+      $("signOutBtn").addEventListener("click", signOut);
+      document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => setView(tab.dataset.view)));
+      $("themeToggle").addEventListener("click", toggleTheme);
+      $("currencySelect").addEventListener("change", (event) => setCurrency(event.target.value));
+      document.querySelectorAll("[data-go]").forEach(button => button.addEventListener("click", () => {
+        const view = button.dataset.go;
+        setView(view);
+        if (view === "createMember") blankMemberForm();
+        if (view === "payments") blankPaymentForm();
+      }));
+      $("recentMembers").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-open-member]");
+        if (!button) return;
+        setView("createMember");
+        loadMember(button.dataset.openMember);
+      });
+      $("recentPayments").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-open-payment]");
+        if (!button) return;
+        loadPayment(button.dataset.openPayment);
+      });
+      $("memberForm").addEventListener("submit", saveMember);
+      $("saveMemberBtn").addEventListener("click", () => {
+        const form = $("memberForm");
+        if (!form.reportValidity()) return;
+        saveMember();
+      });
+      $("paymentForm").addEventListener("submit", savePayment);
+      $("newMemberBtn").addEventListener("click", blankMemberForm);
+      $("newMemberTopBtn").addEventListener("click", () => {
+        setView("createMember");
+        blankMemberForm();
+      });
+      $("deleteMemberBtn").addEventListener("click", deleteMember);
+      $("newPaymentBtn").addEventListener("click", blankPaymentForm);
+      $("deletePaymentBtn").addEventListener("click", deletePayment);
+      $("memberSearch").addEventListener("input", renderMemberList);
+      $("memberMinistryFilter").addEventListener("change", renderMemberList);
+      $("memberStatusFilter").addEventListener("change", renderMemberList);
+      $("memberViewMode").addEventListener("change", renderMemberList);
+      $("memberList").addEventListener("click", (event) => {
+        const row = event.target.closest("[data-member-id]");
+        if (row) {
+          setView("createMember");
+          loadMember(row.dataset.memberId);
+        }
+      });
+      $("paymentTable").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-payment-id]");
+        if (button) loadPayment(button.dataset.paymentId);
+      });
+      $("showAttendanceFormBtn").addEventListener("click", () => {
+        blankAttendanceForm();
+        $("attendanceFormPanel").classList.remove("hidden");
+        $("serviceName").focus();
+      });
+      $("viewAttendanceAnalysisBtn").addEventListener("click", () => {
+        $("attendanceAnalysisPanel").classList.toggle("hidden");
+        renderAttendanceAnalysis();
+      });
+      $("attendanceForm").addEventListener("submit", saveAttendance);
+      $("cancelAttendanceBtn").addEventListener("click", () => {
+        $("attendanceFormPanel").classList.add("hidden");
+        blankAttendanceForm();
+      });
+      ["attendanceMales", "attendanceFemales", "attendanceChildren"].forEach(id => $(id).addEventListener("input", updateAttendanceTotal));
+      $("attendanceDateFilter").addEventListener("change", renderAttendance);
+      $("attendanceServiceFilter").addEventListener("input", renderAttendance);
+      $("clearAttendanceFiltersBtn").addEventListener("click", () => {
+        $("attendanceDateFilter").value = "";
+        $("attendanceServiceFilter").value = "";
+        renderAttendance();
+      });
+      $("attendanceHistory").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-attendance-id]");
+        if (button) deleteAttendance(button.dataset.attendanceId);
+      });
+      $("givingReport").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-report-member-id]");
+        if (!button) return;
+        state.selectedReportMemberId = Number(button.dataset.reportMemberId);
+        renderMemberPaymentHistory();
+        $("memberPaymentHistory").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+      $("memberPaymentHistory").addEventListener("click", (event) => {
+        if (!event.target.closest("[data-close-report-history]")) return;
+        state.selectedReportMemberId = null;
+        renderMemberPaymentHistory();
+      });
+      $("photoInput").addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        stopCamera();
+        state.photoData = await readPhoto(file);
+        updatePhotoPreview();
+        setStatus("Photo loaded. Click Save Member to keep it.");
+      });
+      $("startCameraBtn").addEventListener("click", startCamera);
+      $("takePhotoBtn").addEventListener("click", captureCameraPhoto);
+      $("cancelCameraBtn").addEventListener("click", () => {
+        stopCamera();
+        setStatus("Camera capture cancelled.");
+      });
+      $("removePhotoBtn").addEventListener("click", () => {
+        stopCamera();
+        state.photoData = "";
+        $("photoInput").value = "";
+        updatePhotoPreview();
+        setStatus("Photo removed. Click Save Member to keep this change.");
+      });
+      $("exportBtn").addEventListener("click", exportBackup);
+      $("importInput").addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try { await importBackup(file); }
+        catch (error) { setStatus(error.message); }
+        event.target.value = "";
+      });
+      $("printBtn").addEventListener("click", () => window.print());
+      $("saveAllDataBtn").addEventListener("click", saveAllDataToFolder);
+    }
+
+    async function init() {
+      try {
+        applyTheme(localStorage.getItem(THEME_KEY) || "light");
+        renderCurrencyOptions();
+        renderMinistrySelectOptions();
+        renderEducationOptions();
+        renderLeadershipOptions();
+        bindEvents();
+        renderAuthState();
+        initGoogleSignIn();
+        state.db = await openDb();
+        $("paymentDate").value = today();
+        await refresh();
+        blankMemberForm();
+        blankPaymentForm();
+        blankAttendanceForm();
+        setStatus("Offline database ready.");
+      } catch (error) {
+        console.error(error);
+        setStatus("Database could not open. Try another browser if private mode is blocking storage.");
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
